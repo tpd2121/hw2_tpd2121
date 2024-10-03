@@ -14,7 +14,7 @@ library(readxl)
 
 ```{r mr trash}
 mr_trashwheel = 
-  read_excel("./202409_TrashWheel_Collection_ Data.xlsx", 
+  read_excel("C:/Users/Tasya/Downloads/Fall 2024/Data Science I/Data wrangling/data/202409_TrashWheel_Collection_ Data.xlsx", 
              sheet = "Mr. Trash Wheel", 
              skip = 1) %>% 
   janitor::clean_names () %>% 
@@ -27,7 +27,7 @@ mr_trashwheel =
 
 ```{r professor}
 prof_trashwheel = 
-  read_excel("./202409_TrashWheel_Collection_ Data.xlsx",
+  read_excel("C:/Users/Tasya/Downloads/Fall 2024/Data Science I/Data wrangling/data/202409_TrashWheel_Collection_ Data.xlsx",
              sheet = "Professor Trash Wheel",
              skip = 1) %>% 
   janitor::clean_names() %>% 
@@ -37,7 +37,7 @@ prof_trashwheel =
 
 ```{r gwynnda}
 gwynnda = 
-  read_excel("./202409_TrashWheel_Collection_ Data.xlsx",
+  read_excel("C:/Users/Tasya/Downloads/Fall 2024/Data Science I/Data wrangling/data/202409_TrashWheel_Collection_ Data.xlsx",
              sheet = "Gwynnda Trash Wheel",
              skip = 1) %>% 
   janitor::clean_names() %>% 
@@ -64,7 +64,7 @@ The `mr_trashweel`, `prof_trashwheel`, and `gwynnda` dataset contains `r nrow(mr
 
 ```{r cleaning}
 bakers = 
-  read_csv(file = "./bakers.csv") %>% 
+  read_csv(file = "C:/Users/Tasya/Downloads/Fall 2024/Data Science I/Data wrangling/data/bakers.csv") %>% 
   janitor::clean_names() %>% 
   separate_wider_delim(baker_name, " ", names = c("first_name", "last_name")) %>% 
   arrange(series) %>% 
@@ -72,13 +72,13 @@ bakers =
   unite (id, c(series, first_name), sep = ".")
 
 bakes = 
-  read_csv(file = "./bakes.csv") %>% 
+  read_csv(file = "C:/Users/Tasya/Downloads/Fall 2024/Data Science I/Data wrangling/data/bakes.csv") %>% 
   janitor::clean_names() %>% 
   rename(first_name = baker) %>% 
   unite(id, c(series, first_name), sep = ".")
 
 results = 
-  read_csv(file = "./results.csv",
+  read_csv(file = "C:/Users/Tasya/Downloads/Fall 2024/Data Science I/Data wrangling/data/results.csv",
            skip = 2) %>% 
   janitor::clean_names() %>% 
   rename(first_name = baker) %>% 
@@ -101,7 +101,7 @@ gbb_df3 =
   full_join(gbb_df1, gbb_df2, by = c('id' = 'id', 'last_name' = 'last_name', 'episode' = 'episode'))
 
 #exporting
-write.csv(gbb_df3, "./gbb_df3.csv")
+write.csv(gbb_df3, "C:/Users/Tasya/Downloads/Fall 2024/Data Science I/Data wrangling/data/gbb_df3.csv")
 ```
 
 The data cleaning process for all three datasets are quite similar. After importing the dataset into R, I clean the names so all the syntax are uniform then I change the column containing the bakers' name. For the `bakers` dataframe, I separate the bakers' name into first and last names. For `bakes` and `results`, I just changed the column name from `bakers` to `first_name` so it's uniform with the column on the `bakers` dataframe. `bakers` dataframe has additional process of moving the seris to the first column, selecting only the first 3 columns so it contains only `series`, `first_name`, and last_name columns.
@@ -133,7 +133,6 @@ gbb_reader =
   select(series, episode, everything()) %>% 
   arrange(series, episode) %>% 
   filter(series %in% c("series_05", "series_06", "series_07", "series_08", "series_09", "series_10")) %>% 
-  knitr::kable()
 
 knitr::kable(gbb_reader)
 ```
@@ -142,7 +141,7 @@ Overall, the winners for series are quite predictable as they tend to be the bes
 
 ```{r viewers}
 viewers = 
-  read_csv(file = "./viewers.csv") %>% 
+  read_csv(file = "C:/Users/Tasya/Downloads/Fall 2024/Data Science I/Data wrangling/data/viewers.csv") %>% 
   janitor::clean_names() %>% 
   pivot_longer(
     series_1:series_10,
