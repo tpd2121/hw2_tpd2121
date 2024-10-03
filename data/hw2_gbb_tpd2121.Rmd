@@ -1,70 +1,17 @@
 ---
-title: "hw2_tpd2121"
-output: github_document
+title: "hw2_tpd2121_problem 3"
+output: html_document
 date: "2024-10-03"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
-library(readxl)
 ```
-
-## Problem 2
-
-```{r mr trash}
-mr_trashwheel = 
-  read_excel("./data/202409_TrashWheel_Collection_ Data.xlsx", 
-             sheet = "Mr. Trash Wheel", 
-             skip = 1) %>% 
-  janitor::clean_names () %>% 
-  select(dumpster:homes_powered) %>% 
-  drop_na(dumpster) %>% 
-  mutate(sports_balls = as.integer(round(sports_balls))) %>% 
-  mutate(year = as.numeric(year)) %>% 
-  mutate(wheel = "mr.trash")
-```
-
-```{r professor}
-prof_trashwheel = 
-  read_excel("./data/202409_TrashWheel_Collection_ Data.xlsx",
-             sheet = "Professor Trash Wheel",
-             skip = 1) %>% 
-  janitor::clean_names() %>% 
-  drop_na(month) %>% 
-  mutate(wheel = "prof")
-```
-
-```{r gwynnda}
-gwynnda = 
-  read_excel("./data/202409_TrashWheel_Collection_ Data.xlsx",
-             sheet = "Gwynnda Trash Wheel",
-             skip = 1) %>% 
-  janitor::clean_names() %>% 
-  drop_na(dumpster) %>% 
-  mutate(wheel = "gwynnda.t")
-
-gwynnda_cig = 
-  filter(gwynnda, year == "2022", month == "June")
-```
-
-**combine data**
-```{r combine}
-complete_trash = 
-  bind_rows(mr_trashwheel,prof_trashwheel,gwynnda)
-```
-
-**description**
-
-The data cleaning process for all three dataframe are quite similar. After importing the dataset into R, I clean the names so all the syntax are uniform. I removed the first row (logo) and last 2 rows of the dataframe (blank and sum rows). For `mr_trashwheel`, I converted the `sports_balls` variable to integer and the `year` variable to numeric. For all dataframe, I added new columns named `wheel` containing their sheet name to differentiate each machine when I merge the data. 
-
-The `mr_trashweel`, `prof_trashwheel`, and `gwynnda` dataset contains `r nrow(mr_trashwheel)`, `r nrow(prof_trashwheel)`, and `r nrow(gwynnda)` observations, respectively. The variables on all dataframe are quite similar, which are `r names(mr_trashwheel)`. `sports_balls` only available in `mr_trashwheel` dataframe. The total trash collected by `prof_trashwheel` is `r sum(pull(prof_trashwheel,weight_tons))`, while the total number of cigarette butts collected by `gwynnda` in June 2022 was `r sum(pull(gwynnda_cig, cigarette_butts))`
-
-##Problem 3
 
 ```{r cleaning}
 bakers = 
-  read_csv(file = "./data/bakers.csv") %>% 
+  read_csv(file = "data/bakers.csv") %>% 
   janitor::clean_names() %>% 
   separate_wider_delim(baker_name, " ", names = c("first_name", "last_name")) %>% 
   arrange(series) %>% 
@@ -101,7 +48,7 @@ gbb_df3 =
   full_join(gbb_df1, gbb_df2, by = c('id' = 'id', 'last_name' = 'last_name', 'episode' = 'episode'))
 
 #exporting
-write.csv(gbb_df3, "./data/gbb_df3.csv")
+write.csv(gbb_df3, ".data/gbb_df3.csv")
 ```
 
 The data cleaning process for all three datasets are quite similar. After importing the dataset into R, I clean the names so all the syntax are uniform then I change the column containing the bakers' name. For the `bakers` dataframe, I separate the bakers' name into first and last names. For `bakes` and `results`, I just changed the column name from `bakers` to `first_name` so it's uniform with the column on the `bakers` dataframe. `bakers` dataframe has additional process of moving the seris to the first column, selecting only the first 3 columns so it contains only `series`, `first_name`, and last_name columns.
@@ -132,7 +79,8 @@ gbb_reader =
   ) %>% 
   select(series, episode, everything()) %>% 
   arrange(series, episode) %>% 
-  filter(series %in% c("series_05", "series_06", "series_07", "series_08", "series_09", "series_10")) 
+  filter(series %in% c("series_05", "series_06", "series_07", "series_08", "series_09", "series_10")) %>% 
+  knitr::kable()
 
 knitr::kable(gbb_reader)
 ```
