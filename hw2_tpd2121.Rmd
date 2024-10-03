@@ -1,0 +1,177 @@
+---
+title: "hw2_tpd2121"
+output: html_document
+date: "2024-10-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(readxl)
+```
+
+## Problem 1
+
+```{r mr trash}
+mr_trashwheel = 
+  read_excel("data/202409_TrashWheel_Collection_ Data.xlsx", 
+             sheet = "Mr. Trash Wheel", 
+             skip = 1) %>% 
+  janitor::clean_names () %>% 
+  select(dumpster:homes_powered) %>% 
+  drop_na(dumpster) %>% 
+  mutate(sports_balls = as.integer(round(sports_balls))) %>% 
+  mutate(year = as.numeric(year)) %>% 
+  mutate(wheel = "mr.trash")
+```
+
+```{r professor}
+prof_trashwheel = 
+  read_excel("data/202409_TrashWheel_Collection_ Data.xlsx",
+             sheet = "Professor Trash Wheel",
+             skip = 1) %>% 
+  janitor::clean_names() %>% 
+  drop_na(month) %>% 
+  mutate(wheel = "prof")
+```
+
+```{r gwynnda}
+gwynnda = 
+  read_excel("data/202409_TrashWheel_Collection_ Data.xlsx",
+             sheet = "Gwynnda Trash Wheel",
+             skip = 1) %>% 
+  janitor::clean_names() %>% 
+  drop_na(dumpster) %>% 
+  mutate(wheel = "gwynnda.t")
+
+gwynnda_cig = 
+  filter(gwynnda, year == "2022", month == "June")
+```
+
+**combine data**
+```{r combine}
+complete_trash = 
+  bind_rows(mr_trashwheel,prof_trashwheel,gwynnda)
+```
+
+**description**
+
+The data cleaning process for all three dataframe are quite similar. After importing the dataset into R, I clean the names so all the syntax are uniform. I removed the first row (logo) and last 2 rows of the dataframe (blank and sum rows). For `mr_trashwheel`, I converted the `sports_balls` variable to integer and the `year` variable to numeric. For all dataframe, I added new columns named `wheel` containing their sheet name to differentiate each machine when I merge the data. 
+
+The `mr_trashweel`, `prof_trashwheel`, and `gwynnda` dataset contains `r nrow(mr_trashwheel)`, `r nrow(prof_trashwheel)`, and `r nrow(gwynnda)` observations, respectively. The variables on all dataframe are quite similar, which are `r names(mr_trashwheel)`. `sports_balls` only available in `mr_trashwheel` dataframe. The total trash collected by `prof_trashwheel` is `r sum(pull(prof_trashwheel,weight_tons))`, while the total number of cigarette butts collected by `gwynnda` in June 2022 was `r sum(pull(gwynnda_cig, cigarette_butts))`
+
+##Problem 2
+
+```{r cleaning}
+bakers = 
+  read_csv(file = "./data/bakers.csv") %>% 
+  janitor::clean_names() %>% 
+  separate_wider_delim(baker_name, " ", names = c("first_name", "last_name")) %>% 
+  arrange(series) %>% 
+  select(series, first_name, last_name) %>% 
+  unite (id, c(series, first_name), sep = ".")
+
+bakes = 
+  read_csv(file = "./data/bakes.csv") %>% 
+  janitor::clean_names() %>% 
+  rename(first_name = baker) %>% 
+  unite(id, c(series, first_name), sep = ".")
+
+results = 
+  read_csv(file = "./data/results.csv",
+           skip = 2) %>% 
+  janitor::clean_names() %>% 
+  rename(first_name = baker) %>% 
+  unite (id, c(series, first_name), sep = ".")
+
+#checking data
+anti_join(bakers, bakes)
+anti_join(bakers, results)
+anti_join(bakes,results)
+
+#merging
+gbb_df1 = 
+  full_join(bakers, bakes, by = "id")
+
+gbb_df2 = 
+  full_join(bakers, results, by = "id") %>% 
+  drop_na(result)
+
+gbb_df3 = 
+  full_join(gbb_df1, gbb_df2, by = c('id' = 'id', 'last_name' = 'last_name', 'episode' = 'episode'))
+
+#exporting
+write.csv(gbb_df3, ".data/gbb_df3.csv")
+```
+
+The data cleaning process for all three datasets are quite similar. After importing the dataset into R, I clean the names so all the syntax are uniform then I change the column containing the bakers' name. For the `bakers` dataframe, I separate the bakers' name into first and last names. For `bakes` and `results`, I just changed the column name from `bakers` to `first_name` so it's uniform with the column on the `bakers` dataframe. `bakers` dataframe has additional process of moving the seris to the first column, selecting only the first 3 columns so it contains only `series`, `first_name`, and last_name columns.
+
+For all dataframe, I merged the `series` and `first_name` columns, forming a new variable called `id`. This is done to make it easier in merging, since this variable exists in all dataframe. While checking the data using the `anti_join` function, I realized that season 2 contestant, Joanne Wheatley, is recorded with different `first_name` in each dataframe. Further, the `bakers` and `results` dataframe contains data until season 10, but `bakes` data frame only has data until season 8. 
+
+I used 2 steps in merging the data since it's easier for my understanding (but maybe not the best work practice). The first step is by merging `bakers` and `bakes`, forming `gbb_df1`, then I merged `bakers` and `results` forming `gbb_df2`. For the latter, I also use `drop_na` as eliminated participants will have no relevance in the rest of the series. Finally, I merged `gbb_df1` and `gbb_df2` to form the final data, `gbb_df3`. 
+
+```{r table}
+gbb_reader = 
+  filter(gbb_df3, result %in% c("WINNER", "STAR BAKER")) %>% 
+  select(-last_name) %>% 
+  separate_wider_delim(id, ".", names = c("series", "first_name")) %>% 
+  mutate(
+    series = case_match(
+      series, 
+      "1" ~ "series_01",
+      "2" ~ "series_02",
+      "3" ~ "series_03",
+      "4" ~ "series_04",
+      "5" ~ "series_05",
+      "6" ~ "series_06",
+      "7" ~ "series_07",
+      "8" ~ "series_08",
+      "9" ~ "series_09",
+      "10" ~ "series_10"
+      )
+  ) %>% 
+  select(series, episode, everything()) %>% 
+  arrange(series, episode) %>% 
+  filter(series %in% c("series_05", "series_06", "series_07", "series_08", "series_09", "series_10")) %>% 
+  knitr::kable()
+
+knitr::kable(gbb_reader)
+```
+
+Overall, the winners for series are quite predictable as they tend to be the best two in terms of technical in their seasons, and won star baker multiple times. 
+
+```{r viewers}
+viewers = 
+  read_csv(file = "./data/viewers.csv") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    series_1:series_10,
+    names_to = "series",
+    values_to = "viewership"
+    ) %>% 
+  select(series, everything()) %>% 
+  mutate(
+    series = case_match(
+      series, 
+      "series_1" ~ "series_01",
+      "series_2" ~ "series_02",
+      "series_3" ~ "series_03",
+      "series_4" ~ "series_04",
+      "series_5" ~ "series_05",
+      "series_6" ~ "series_06",
+      "series_7" ~ "series_07",
+      "series_8" ~ "series_08",
+      "series_9" ~ "series_09",
+      "series_10" ~ "series_10"
+      )
+  ) %>% 
+  arrange(series, episode)
+
+view_1 = 
+  filter(viewers, series == "series_01")
+
+view_5 = 
+  filter(viewers, series == "series_05")
+```
+
+The average viewership for season 1 is `r mean(pull(view_1, viewership), na.rm=TRUE)` for the first 6 episodes with available data, while season 5 is `r mean(pull(view_5, viewership) , na.rm=TRUE)` for all 10 episodes.
